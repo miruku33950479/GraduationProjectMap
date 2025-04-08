@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地圖圖釘系統</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 600px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>我的地圖 - 雲林縣虎尾鎮</h1>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // 設定地圖中心為雲林縣虎尾鎮
+    const map = L.map('map').setView([23.7249, 120.4589], 13);
+
+    // 設定地圖底圖
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    // 儲存所有圖釘資料
+    let pins = [];
+
+    // 從 FastAPI 讀取所有圖釘並顯示
+    fetch('http://127.0.0.1:8000/pins/')
+      .then(res => res.json())
+      .then(data => {
+        pins = data;
+        data.forEach(pin => {
+          const marker = L.marker([pin.lat, pin.lng]).addTo(map)
+            .bindPopup(`
+              <b>${pin.title}</b><br>${pin.description}
+              <br><button onclick="deletePin('${pin.id}')">刪除圖釘</button>
+            `);
+        });
+      });
+
+    // 點擊地圖新增圖釘
+    map.on('click', function(e) {
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      const title = prompt('輸入圖釘標題：');
+      const description = prompt('輸入描述：');
+
+      if (title && description) {
+        // 將新圖釘送到 FastAPI
+        fetch('http://127.0.0.1:8000/pins/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ lat, lng, title, description })
+        })
+        .then(res => res.json())
+        .then(data => {
+          // 顯示新增的圖釘
+          pins.push(data);
+          const marker = L.marker([data.lat, data.lng]).addTo(map)
+            .bindPopup(`
+              <b>${data.title}</b><br>${data.description}
+              <br><button onclick="deletePin('${data.id}')">刪除圖釘</button>
+            `);
+        });
+      }
+    });
+
+    // 刪除圖釘
+    function deletePin(id) {
+      fetch(`http://127.0.0.1:8000/pins/${id}`, {
+        method: 'DELETE'
+      })
+      .then(res => res.json())
+      .then(() => {
+        // 更新前端圖釘
+        pins = pins.filter(pin => pin.id !== id);
+        map.eachLayer(layer => {
+          if (layer instanceof L.Marker) {
+            const lat = layer.getLatLng().lat;
+            const lng = layer.getLatLng().lng;
+            if (!pins.some(pin => pin.lat === lat && pin.lng === lng)) {
+              map.removeLayer(layer);
+            }
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>
