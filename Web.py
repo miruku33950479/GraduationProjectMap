@@ -13,7 +13,7 @@ m = folium.Map(location=map_center, zoom_start=13)
 
 # 3. 加圖釘（示範）
 pins = [
-    {"lat": 23.7097, "lng": 120.4432, "title": "虎尾鎮圖釘", "description": "這是一個圖釘", "image_url": "https://..."}
+    {"lat": 23.7097, "lng": 120.4432, "title": "虎尾鎮圖釘", "description": "這是一個圖釘", "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRCpM8B3LKtV4p7d_n3PyGvao5rPfUucqN_0A&s"}
 ]
 for pin in pins:
     folium.Marker(
