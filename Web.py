@@ -3,9 +3,9 @@ import folium
 from streamlit_folium import st_folium
 
 # 1. 設定為寬版佈局
-st.set_page_config(page_title="虎尾地圖", layout="wide")
+st.set_page_config(page_title="大虎尾地圖", layout="wide")
 
-st.title('虎尾地圖')
+st.title('大虎尾地圖')
 
 # 2. 建立 Folium 地圖
 map_center = [23.706415, 120.427451]
