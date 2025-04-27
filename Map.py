@@ -1,41 +1,35 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 from uuid import uuid4
 
 app = FastAPI()
 
+# 定義圖釘的資料格式
 class Pin(BaseModel):
     lat: float
     lng: float
     title: str
     description: str
 
-pins = []
+# 暫存所有圖釘（用字典格式來存ID）
+pins: List[Dict] = []
 
-# 創建圖釘的端點
+# 新增圖釘
 @app.post("/pins/")
 async def create_pin(pin: Pin):
-    pins.append(pin)  # 儲存圖釘資料
-    return pin  # 返回包含座標和圖片 URL 的圖釘資料
-
-# 取得所有圖釘資料的端點
-@app.get("/pins/", response_model=List[Pin])
-async def read_pins():
-    return pins
-
-@app.post("/pins/")
-async def create_pin(pin: Pin):
-    pin_id = str(uuid4())  # 生成唯一的 ID
+    pin_id = str(uuid4())  # 自動生成唯一 ID
     new_pin = pin.dict()
     new_pin["id"] = pin_id
     pins.append(new_pin)
     return new_pin
 
-@app.get("/pins/", response_model=List[Pin])
+# 取得所有圖釘
+@app.get("/pins/")
 async def read_pins():
     return pins
 
+# 刪除特定 ID 的圖釘
 @app.delete("/pins/{pin_id}")
 async def delete_pin(pin_id: str):
     for pin in pins:
